@@ -43,10 +43,6 @@ grassl_same = {
 }
 
 
-def ceil_div(a, b):
-    return -(-a // b)
-
-
 def expand_grassl(same):
     values = [0]
     for N in range(1, 131):
@@ -54,71 +50,36 @@ def expand_grassl(same):
     return tuple(values)
 
 
-k_Grassl = {
-    key: expand_grassl(same)
-    for key, same in grassl_same.items()
-}
+k_Grassl = {key: expand_grassl(same) for key, same in grassl_same.items()}
+
 
 def GG(q, delta, n, r, kappa):
-    return kappa <= (
-        n
-        - 2 * (delta - 1)
-        - (n - delta + 1) // (r + 1)
-        - (
-            n
-            - 2 * (delta - 1)
-            - (n - delta + 1) // (r + 1)
-        )
-        // (r + 1)
-    )
+    return kappa <= n - 2 * (delta - 1) - (n - delta + 1) // (r + 1) - (n - 2 * (delta - 1) - (n - delta + 1) // (r + 1)) // (r + 1)
 
 
 def pure_S(q, delta, n, r, kappa):
     if 2 * r > n + kappa:
         return False
-    return 2 * delta <= (
-        n - kappa - 2 * ceil_div(n + kappa, 2 * r) + 4
-    )
+    return 2 * delta <= n - kappa - 2 * ((n + kappa + 2 * r - 1) // (2 * r)) + 4
 
 
 def pure_G(q, delta, n, r, kappa):
     if 2 * r > n + kappa:
         return False
-    return n >= max(
-        ell * (r + 1)
-        + sum(
-            ceil_div(delta, q**t)
-            for t in range(0, n + kappa - 2 * ell * r - 1, 2)
-        )
-        for ell in range(ceil_div(n + kappa, 2 * r))
-    )
+    return n >= max(ell * (r + 1) + sum((delta + q**t - 1) // q**t for t in range(0, n + kappa - 2 * ell * r - 1, 2)) for ell in range((n + kappa + 2 * r - 1) // (2 * r)))
 
 
 def pure_P(q, delta, n, r, kappa):
     if 2 * r > n + kappa:
         return False
-    return int(delta) <= min(
-        Fraction(int(q), int(1)) ** (n + kappa - 2 * ell * r - 2)
-        * (q * q - 1)
-        * (n - ell * (r + 1))
-        / (
-            q ** (n + kappa - 2 * ell * r)
-            - 1
-        )
-        for ell in range(ceil_div(n + kappa, 2 * r))
-    )
+    return delta <= min(Fraction(q ** (n + kappa - 2 * ell * r - 2) * (q * q - 1) * (n - ell * (r + 1)), q ** (n + kappa - 2 * ell * r) - 1) for ell in range((n + kappa + 2 * r - 1) // (2 * r)))
 
 
 def pure_SP(q, delta, n, r, kappa):
     if 2 * r > n + kappa:
         return False
     for ell in range((n - 1) // (r + 1) + 1):
-        V = sum(
-            comb(n - ell * (r + 1), i) * (q * q - 1) ** i
-            for i in range(
-                min((delta - 1) // 2, n - ell * (r + 1)) + 1
-            )
-        )
+        V = sum(comb(n - ell * (r + 1), i) * (q * q - 1) ** i for i in range(min((delta - 1) // 2, n - ell * (r + 1)) + 1))
         if n - kappa - 2 * ell < 0:
             return False
         if V * V > (q * q) ** (n - kappa - 2 * ell):
@@ -129,54 +90,24 @@ def pure_SP(q, delta, n, r, kappa):
 def ref25_G(q, delta, n, r, kappa):
     if kappa <= r:
         return True
-    return n + kappa >= 2 * max(
-        ell * (r + 1)
-        + sum(
-            ceil_div(delta, q ** (2 * i))
-            for i in range(kappa - ell * r)
-        )
-        for ell in range(1, ceil_div(kappa, r))
-    )
-
-
-def CM_terms(q, delta, n, r, kappa):
-    if (n + kappa) % 2 != 0:
-        return []
-    Q = q * q
-    m = (n + kappa) // 2
-    ell_max = (m - 1) // (r + 1)
-    k_values = k_Grassl[(Q, delta)]
-    terms = []
-    for ell in range(ell_max + 1):
-        N = m - ell * (r + 1)
-        k = k_values[N]
-        terms.append((ell * r + k, ell, N, k))
-    return terms
+    return n + kappa >= 2 * max(ell * (r + 1) + sum((delta + q ** (2 * i) - 1) // q ** (2 * i) for i in range(kappa - ell * r)) for ell in range(1, (kappa + r - 1) // r))
 
 
 def ref25_CM(q, delta, n, r, kappa):
-    terms = CM_terms(q, delta, n, r, kappa)
-    return bool(terms) and kappa <= min(term[0] for term in terms)
+    if (n + kappa) % 2 != 0:
+        return False
+    m = (n + kappa) // 2
+    return kappa <= min(ell * r + k_Grassl[(q * q, delta)][m - ell * (r + 1)] for ell in range((m - 1) // (r + 1) + 1))
 
 
 def ref25_S(q, delta, n, r, kappa):
-    return 2 * delta <= n - kappa - 2 * ceil_div(kappa, r) + 4
+    return 2 * delta <= n - kappa - 2 * ((kappa + r - 1) // r) + 4
 
 
 def ref25_P(q, delta, n, r, kappa):
     if kappa <= r:
         return True
-    return int(2 * delta) <= min(
-        Fraction(
-            int(
-                q ** (2 * (kappa - ell * r) - 2)
-                * (q * q - 1)
-                * (n + kappa - 2 * ell * (r + 1))
-            ),
-            int(q ** (2 * (kappa - ell * r)) - 1),
-        )
-        for ell in range(1, ceil_div(kappa, r))
-    )
+    return 2 * delta <= min(Fraction(q ** (2 * (kappa - ell * r) - 2) * (q * q - 1) * (n + kappa - 2 * ell * (r + 1)), q ** (2 * (kappa - ell * r)) - 1) for ell in range(1, (kappa + r - 1) // r))
 
 
 bounds = (
@@ -193,11 +124,7 @@ bounds = (
 
 
 def max_kappa(bound, q, delta, n, r):
-    kappa_max = None
-    for kappa in range(n + 1):
-        if (n + kappa) % 2 == 0 and bound(q, delta, n, r, kappa):
-            kappa_max = kappa
-    return kappa_max
+    return max((kappa for kappa in range(n + 1) if (n + kappa) % 2 == 0 and bound(q, delta, n, r, kappa)), default=None)
 
 
 def main():
@@ -206,8 +133,7 @@ def main():
             for n, r in pairs:
                 print(f"\n(q, delta, n, r) = ({q}, {delta}, {n}, {r})")
                 for index, (name, bound) in enumerate(bounds, start=1):
-                    kappa_max = max_kappa(bound, q, delta, n, r)
-                    print(f"{index}. {name}: {kappa_max}")
+                    print(f"{index}. {name}: {max_kappa(bound, q, delta, n, r)}")
 
 
 if __name__ == "__main__":
