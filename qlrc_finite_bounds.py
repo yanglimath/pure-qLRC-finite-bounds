@@ -1,4 +1,4 @@
-# This program compares the tightness of the nine bounds mentioned in the manuscript for finite code lengths; the resulting data are used to prepare Table II.
+# This Python program compares the tightness of the nine bounds mentioned in the manuscript for finite code lengths; the resulting data are used to prepare Table II.
 
 from fractions import Fraction
 from math import comb
