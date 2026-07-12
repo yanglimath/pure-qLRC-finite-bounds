@@ -1,13 +1,13 @@
 # Finite-length comparison of nine qLRC bounds
 
-`qlrc_finite_bounds_sagemath.py` is the self-contained program used to obtain the numerical data for Table II. It compares nine upper bounds on the quantum dimension `kappa` for 60 parameter tuples. The program uses only the Python standard library, prints the results to the console, and neither accesses the Internet nor creates output files.
+`qlrc_finite_bounds.py` is the self-contained Python program used to obtain the numerical data for Table II. It compares nine upper bounds on the quantum dimension `kappa` for 60 parameter tuples. The program uses only the Python standard library, prints the results to the console, and neither accesses the Internet nor creates output files.
 
 ## Run the program
 
 With Python:
 
 ```bash
-python3 qlrc_finite_bounds_sagemath.py
+python3 qlrc_finite_bounds.py
 ```
 
 ## Parameter tuples
@@ -27,86 +27,67 @@ and six explicitly listed `(n,r)` pairs for every `(q,delta)`. Hence the output 
 
 parameter blocks. Each block begins with `(q, delta, n, r)` and then lists the nine bounds in manuscript order.
 
-## How the residual length N is determined
+## CM-like bound and Grassl table data
 
-The CM-like bound does not require the optimal value of `kappa` to be known in advance. For fixed `(q,delta,n,r)`, `max_kappa` enumerates every integer
-
-```text
-0 <= kappa <= n
-```
-
-that satisfies `n+kappa` even. For each candidate `kappa`, `ref25_CM` sets
+The CM-like bound requires the function `k_opt^(Q)(N,delta)`, which denotes the maximum possible dimension of a `Q`-ary linear code of length `N` and minimum distance at least `delta`. For a candidate `kappa`, the program sets
 
 ```text
-m = (n+kappa)/2
-ell_max = floor((m-1)/(r+1))
+Q = q^2,
+m = (n+kappa)/2,
+N = m - ell*(r+1),
 ```
 
-and enumerates every integer `ell` from `0` through `ell_max`. The corresponding residual length is calculated at that moment as
+and tests
 
 ```text
-N = m - ell*(r+1).
+kappa <= min_ell {ell*r + k_opt^(Q)(N,delta)}.
 ```
 
-Thus `N` is generated separately for every tested pair `(kappa,ell)`. It is not selected before the search and it is not tied to a preselected `ell`.
+The minimization is taken over every integer `ell` from `0` to `floor((m-1)/(r+1))`. Thus `N` is calculated separately for every tested pair `(kappa,ell)` and is not fixed in advance. For the 60 parameter tuples used in Table II, all required values satisfy `1 <= N <= 130`.
 
-Because `0 <= kappa <= n`, one has `m <= n`; because of the definition of `ell_max`, one has `N >= 1`. All Table II cases satisfy `n <= 130`, so every required residual length satisfies
+For quaternary and nonary linear codes, the [Grassl table](https://www.codetables.de) records the parameters of the best known linear codes. The program therefore uses the dimension in the lower-bound entry of the Grassl table as the optimal value required by the CM-like bound:
 
 ```text
-1 <= N <= 130.
+k_Grassl^(Q)(N,delta) = k_opt^(Q)(N,delta),   Q = 4, 9.
 ```
 
-The embedded Grassl snapshot therefore stores values for all indices `0 <= N <= 130`. Index `N=0` is included only to simplify reconstruction of the stored sequences.
-
-For each candidate `kappa`, the program evaluates
-
-```text
-min_ell {ell*r + k_Grassl^(Q)(N,delta)},   Q = q^2,
-```
-
-over the complete allowed range of `ell`. The candidate passes the CM-like test when this minimum is at least `kappa`. The largest passing candidate is the reported upper value of `kappa`.
-
-## Grassl snapshot and compression
-
-The fixed snapshot was obtained from [codetables.de](https://www.codetables.de) on 2026-07-13 for
-
-```text
-Q = 4, 9,
-delta = 3, 5, 8, 10, 12,
-0 <= N <= 130.
-```
-
-`k_Grassl[(Q,delta)][N]` is the largest dimension recorded by the snapshot for a known linear code of length `N` and minimum distance at least `delta`. The finite-length comparison adopts the explicit numerical assumption
-
-```text
-k_Grassl^(Q)(N,delta) = k_opt^(Q)(N,delta).
-```
-
-For a Grassl entry whose lower and upper bounds do not coincide, this is a computational convention rather than an independently proved optimality statement. The assumption is documented here instead of being repeated in every console-output block.
-
-The complete dimension sequences are stored losslessly through `grassl_same`. For each `(Q,delta)`,
+The required Grassl table data for `delta = 3, 5, 8, 10, 12` and `0 <= N <= 130` are included directly in the Python program. The variable `grassl_same` stores these data in compressed form. For each `(Q,delta)`,
 
 ```text
 N in grassl_same[(Q,delta)]
 ```
 
-means
+means that the recorded dimension does not increase from length `N-1` to length `N`:
 
 ```text
 k_Grassl^(Q)(N,delta) = k_Grassl^(Q)(N-1,delta).
 ```
 
-At every length not listed in `grassl_same`, the stored dimension increases by one. `expand_grassl` starts from the value zero at `N=0` and reconstructs the complete tuple of 131 values.
+At every length not contained in `grassl_same[(Q,delta)]`, the dimension increases by one. Starting from `k_Grassl^(Q)(0,delta)=0`, `expand_grassl` applies this rule successively for `N=1,...,130` and reconstructs the complete dimension sequence. The reconstructed value is accessed in the CM-like bound as
 
-For example, for `(Q,delta)=(4,8)`, the number `19` occurs in `grassl_same[(4,8)]`, whereas `20` does not. Consequently,
-
-```text
-k_Grassl^(4)(18,8) = 9,
-k_Grassl^(4)(19,8) = 9,
-k_Grassl^(4)(20,8) = 10.
+```python
+k_Grassl[(Q, delta)][N]
 ```
 
-The snapshot is embedded data, not a crawler. `expand_grassl` does not read a file and does not access the Internet.
+For example, consider `(q,delta,n,r,kappa)=(2,3,30,2,14)`. Then `Q=4`, `m=22`, and
+
+```python
+grassl_same[(4, 3)] = (1, 2, 6, 22, 86)
+```
+
+For `ell=5`, the residual length is `N=22-5*(2+1)=7`. Up to length 7, the dimension remains unchanged at `N=1,2,6` and increases at `N=3,4,5,7`. Hence `expand_grassl` gives
+
+```python
+k_Grassl[(4, 3)][7] = 4
+```
+
+and the corresponding CM term is
+
+```text
+ell*r + k_Grassl[(4,3)][N] = 5*2 + 4 = 14.
+```
+
+Testing every allowed `ell=0,...,7` gives CM terms `18, 18, 17, 16, 15, 14, 14, 14`. Their minimum is 14, so the candidate `kappa=14` satisfies the CM-like bound. The function `max_kappa` repeats this test for every admissible `kappa` and reports the largest passing value.
 
 ## Variables
 
@@ -157,7 +138,7 @@ The snapshot is embedded data, not a crawler. `expand_grassl` does not read a fi
 8. [25, Theorem 6] Singleton-like bound
 9. [25, Theorem 6] Plotkin-like bound
 
-The console output contains only the parameter tuple and the nine final numerical results. The CM algorithm, Grassl snapshot, and assumption used for item 7 are documented in the preceding sections and are not repeated in the output. A smaller reported value gives a tighter upper restriction on `kappa` for that parameter tuple. The computation establishes comparisons only over the explicitly listed finite parameter set.
+The console output contains only the parameter tuple and the nine final numerical results. The CM algorithm and the Grassl table data used for item 7 are documented in the preceding section and are not repeated in the output. A smaller reported value gives a tighter upper restriction on `kappa` for that parameter tuple. The computation establishes comparisons only over the explicitly listed finite parameter set.
 
 ## License
 
