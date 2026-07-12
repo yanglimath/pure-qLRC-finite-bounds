@@ -16,10 +16,20 @@ The program uses
 
 ```text
 q = 2, 3,
-delta = 3, 5, 8, 10, 12,
+delta = 3, 5, 7, 9, 11,
 ```
 
-and six explicitly listed `(n,r)` pairs for every `(q,delta)`. Hence the output contains
+and the following six explicitly listed `(n,r)` pairs for every `(q,delta)`:
+
+```text
+delta = 3:  (38,2), (52,3), (67,4), (86,5), (100,6), (114,7)
+delta = 5:  (45,2), (54,3), (69,4), (90,5), (102,6), (113,7)
+delta = 7:  (42,2), (60,3), (68,4), (84,5),  (99,6), (120,7)
+delta = 9:  (38,2), (53,3), (68,4), (86,5),  (99,6), (115,7)
+delta = 11: (45,2), (60,3), (73,4), (85,5),  (97,6), (111,7)
+```
+
+The six positions cover the code-length strata `30-45`, `46-60`, `61-75`, `76-90`, `91-105`, and `106-120`, with locality `r=2,3,4,5,6,7`, respectively. Hence the output contains
 
 ```text
 2 × 5 × 6 = 60
@@ -43,7 +53,7 @@ and tests
 kappa <= min_ell {ell*r + k_opt^(Q)(N,delta)}.
 ```
 
-The minimization is taken over every integer `ell` from `0` to `floor((m-1)/(r+1))`. Thus `N` is calculated separately for every tested pair `(kappa,ell)` and is not fixed in advance. For the 60 parameter tuples used in Table II, all required values satisfy `1 <= N <= 130`.
+The minimization is taken over every integer `ell` from `0` to `floor((m-1)/(r+1))`. Thus `N` is calculated separately for every tested pair `(kappa,ell)` and is not fixed in advance. For the 60 parameter tuples used in Table II, all required values satisfy `1 <= N <= 120`.
 
 For quaternary and nonary linear codes, the [Grassl table](https://www.codetables.de) records the parameters of the best known linear codes. The program therefore uses the dimension in the lower-bound entry of the Grassl table as the optimal value required by the CM-like bound:
 
@@ -51,7 +61,7 @@ For quaternary and nonary linear codes, the [Grassl table](https://www.codetable
 k_Grassl^(Q)(N,delta) = k_opt^(Q)(N,delta),   Q = 4, 9.
 ```
 
-The required Grassl table data for `delta = 3, 5, 8, 10, 12` and `0 <= N <= 130` are included directly in the Python program. The variable `grassl_same` stores these data in compressed form. For each `(Q,delta)`,
+The required Grassl table data for `delta = 3, 5, 7, 9, 11` and `0 <= N <= 120` are included directly in the Python program. The variable `grassl_same` stores these data in compressed form. For each `(Q,delta)`,
 
 ```text
 N in grassl_same[(Q,delta)]
@@ -63,7 +73,7 @@ means that the recorded dimension does not increase from length `N-1` to length 
 k_Grassl^(Q)(N,delta) = k_Grassl^(Q)(N-1,delta).
 ```
 
-At every length not contained in `grassl_same[(Q,delta)]`, the dimension increases by one. Starting from `k_Grassl^(Q)(0,delta)=0`, `expand_grassl` applies this rule successively for `N=1,...,130` and reconstructs the complete dimension sequence. The reconstructed value is accessed in the CM-like bound as
+At every length not contained in `grassl_same[(Q,delta)]`, the dimension increases by one. Starting from `k_Grassl^(Q)(0,delta)=0`, `expand_grassl` applies this rule successively for `N=1,...,120` and reconstructs the complete dimension sequence. The reconstructed value is accessed in the CM-like bound as
 
 ```python
 k_Grassl[(Q, delta)][N]
@@ -113,7 +123,7 @@ Testing every allowed `ell=0,...,7` gives CM terms `18, 18, 17, 16, 15, 14, 14, 
 
 | Function | Purpose |
 | --- | --- |
-| `expand_grassl` | Expands one compressed `grassl_same` tuple into values indexed by `N=0,...,130`. |
+| `expand_grassl` | Expands one compressed `grassl_same` tuple into values indexed by `N=0,...,120`. |
 | `GG` | Tests the GG Singleton-like bound in (1). |
 | `pure_S` | Tests the pure Singleton-like bound in (7). |
 | `pure_G` | Tests the pure Griesmer-like bound in (8). |
