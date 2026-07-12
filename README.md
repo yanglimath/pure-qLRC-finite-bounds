@@ -35,7 +35,7 @@ The CM-like bound does not require the optimal value of `kappa` to be known in a
 0 <= kappa <= n
 ```
 
-that satisfies `n+kappa` even. For each candidate `kappa`, `CM_terms` sets
+that satisfies `n+kappa` even. For each candidate `kappa`, `ref25_CM` sets
 
 ```text
 m = (n+kappa)/2
@@ -132,7 +132,6 @@ The snapshot is embedded data, not a crawler. `expand_grassl` does not read a fi
 
 | Function | Purpose |
 | --- | --- |
-| `ceil_div` | Computes the exact ceiling of an integer quotient. |
 | `expand_grassl` | Expands one compressed `grassl_same` tuple into values indexed by `N=0,...,130`. |
 | `GG` | Tests the GG Singleton-like bound in (1). |
 | `pure_S` | Tests the pure Singleton-like bound in (7). |
@@ -140,8 +139,7 @@ The snapshot is embedded data, not a crawler. `expand_grassl` does not read a fi
 | `pure_P` | Tests the pure Plotkin-like bound in (9). |
 | `pure_SP` | Tests the pure sphere-packing-like bound in (10). |
 | `ref25_G` | Tests the Griesmer-like bound in [25, Theorem 6]. |
-| `CM_terms` | Calculates `(ell*r+k, ell, N, k)` for every allowed `ell`, using `k=k_Grassl^(q^2)(N,delta)`. |
-| `ref25_CM` | Tests the CM-like bound in [25, Theorem 6] under the stated Grassl assumption. |
+| `ref25_CM` | Tests the CM-like bound in [25, Theorem 6] by enumerating every allowed `ell` and using `k=k_Grassl^(q^2)(N,delta)`. |
 | `ref25_S` | Tests the Singleton-like bound in [25, Theorem 6]. |
 | `ref25_P` | Tests the Plotkin-like bound in [25, Theorem 6]. |
 | `max_kappa` | Enumerates all admissible `kappa` and returns the largest candidate allowed by one bound. |
