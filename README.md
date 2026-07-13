@@ -1,140 +1,108 @@
 # Finite-length comparison of nine qLRC bounds
 
-`qlrc_finite_bounds.py` is the self-contained Python program used to obtain the numerical data for Table II. It compares nine upper bounds on the quantum dimension `kappa` for 60 parameter tuples. The program uses only the Python standard library, prints the results to the console, and neither accesses the Internet nor creates output files.
+`qlrc_finite_bounds.py` is the self-contained Python program used to generate the numerical data in Tables II and III. It compares nine upper bounds on the quantum dimension `kappa` for 80 parameter tuples. The program uses only the Python standard library, prints results to the console, and neither accesses the Internet nor creates files.
 
-## Run the program
-
-With Python:
+## Run
 
 ```bash
 python3 qlrc_finite_bounds.py
 ```
 
-## Parameter tuples
+## Tested parameters and sampling
 
-The program uses
+The candidate ranges are
 
 ```text
-q = 2, 3,
-delta = 3, 5, 7, 9, 11,
+q = 2, 3
+delta = 3, 5, 7, 9, 11
+30 <= n <= 130
+2 <= r <= 6
 ```
 
-and the following six explicitly listed `(n,r)` pairs for every `(q,delta)`:
+For each fixed `(q,delta)`, the program forms all `(n,r)` pairs for which every bound has at least one admissible `kappa`, then samples eight pairs uniformly without replacement. A pair already selected for one `delta` is not reused for another `delta` with the same `q`.
+
+One pseudorandom generator is initialized with seed `2026` before the loops over `q = 2,3` and the five increasing values of `delta`; its state is not reset. Thus the program produces
 
 ```text
-delta = 3:  (38,2), (52,3), (67,4), (86,5), (100,6), (114,7)
-delta = 5:  (45,2), (54,3), (69,4), (90,5), (102,6), (113,7)
-delta = 7:  (42,2), (60,3), (68,4), (84,5),  (99,6), (120,7)
-delta = 9:  (38,2), (53,3), (68,4), (86,5),  (99,6), (115,7)
-delta = 11: (45,2), (60,3), (73,4), (85,5),  (97,6), (111,7)
+2 * 5 * 8 = 80
 ```
 
-The six positions cover the code-length strata `30-45`, `46-60`, `61-75`, `76-90`, `91-105`, and `106-120`, with locality `r=2,3,4,5,6,7`, respectively. Hence the output contains
+distinct parameter tuples, exactly reproducing the two tables.
+
+## Conversion to upper bounds on kappa
+
+For each tuple `(q,delta,n,r)` and each bound, `max_kappa` enumerates every integer
 
 ```text
-2 × 5 × 6 = 60
+0 <= kappa <= n,    n + kappa = 0 (mod 2),
 ```
 
-parameter blocks. Each block begins with `(q, delta, n, r)` and then lists the nine bounds in manuscript order.
+tests the bound and its applicability conditions, and returns the largest passing value. A smaller result is a tighter upper bound on `kappa`.
 
-## CM-like bound and Grassl table data
+## CM-like bound and Grassl data
 
-The CM-like bound requires the function `k_opt^(Q)(N,delta)`, which denotes the maximum possible dimension of a `Q`-ary linear code of length `N` and minimum distance at least `delta`. For a candidate `kappa`, the program sets
+The CM-like bound requires `k_opt^(Q)(N,delta)`, the maximum possible dimension of a `Q`-ary linear code of length `N` and minimum distance at least `delta`. For every candidate `kappa`, the program sets
 
 ```text
-Q = q^2,
-m = (n+kappa)/2,
-N = m - ell*(r+1),
+Q = q^2
+m = (n + kappa)/2
+N = m - ell*(r + 1)
 ```
 
 and tests
 
 ```text
-kappa <= min_ell {ell*r + k_opt^(Q)(N,delta)}.
+kappa <= min_ell {ell*r + k_opt^(Q)(N,delta)},
 ```
 
-The minimization is taken over every integer `ell` from `0` to `floor((m-1)/(r+1))`. Thus `N` is calculated separately for every tested pair `(kappa,ell)` and is not fixed in advance. For the 60 parameter tuples used in Table II, all required values satisfy `1 <= N <= 120`.
+where `ell = 0,...,floor((m-1)/(r+1))`. Hence `N` is determined separately for every tested `(kappa,ell)` and is not fixed beforehand.
 
-For quaternary and nonary linear codes, the [Grassl table](https://www.codetables.de) records the parameters of the best known linear codes. The program therefore uses the dimension in the lower-bound entry of the Grassl table as the optimal value required by the CM-like bound:
+For `Q = 4,9`, the Grassl table records the dimensions of the best-known linear codes. In this finite comparison, the program uses
 
 ```text
-k_Grassl^(Q)(N,delta) = k_opt^(Q)(N,delta),   Q = 4, 9.
+k_Grassl^(Q)(N,delta) = k_opt^(Q)(N,delta)
 ```
 
-The required Grassl table data for `delta = 3, 5, 7, 9, 11` and `0 <= N <= 120` are included directly in the Python program. The variable `grassl_same` stores these data in compressed form. For each `(Q,delta)`,
+for all required values. This is the assumption underlying the displayed CM values; when the Grassl entry is not certified optimal, the resulting comparison is conditional.
+
+The necessary Grassl data for `delta = 3,5,7,9,11` and `0 <= N <= 130` are included in compressed form. For each `(Q,delta)`, membership
 
 ```text
 N in grassl_same[(Q,delta)]
 ```
 
-means that the recorded dimension does not increase from length `N-1` to length `N`:
+means
 
 ```text
 k_Grassl^(Q)(N,delta) = k_Grassl^(Q)(N-1,delta).
 ```
 
-At every length not contained in `grassl_same[(Q,delta)]`, the dimension increases by one. Starting from `k_Grassl^(Q)(0,delta)=0`, `expand_grassl` applies this rule successively for `N=1,...,120` and reconstructs the complete dimension sequence. The reconstructed value is accessed in the CM-like bound as
-
-```python
-k_Grassl[(Q, delta)][N]
-```
-
-For example, consider `(q,delta,n,r,kappa)=(2,3,30,2,14)`. Then `Q=4`, `m=22`, and
+At every other length the dimension increases by one. Starting from `k_Grassl^(Q)(0,delta)=0`, `expand_grassl` restores the complete sequence. For example,
 
 ```python
 grassl_same[(4, 3)] = (1, 2, 6, 22, 86)
-```
-
-For `ell=5`, the residual length is `N=22-5*(2+1)=7`. Up to length 7, the dimension remains unchanged at `N=1,2,6` and increases at `N=3,4,5,7`. Hence `expand_grassl` gives
-
-```python
 k_Grassl[(4, 3)][7] = 4
 ```
 
-and the corresponding CM term is
+because the value stays unchanged at `N=1,2,6` and increases at `N=3,4,5,7`.
 
-```text
-ell*r + k_Grassl[(4,3)][N] = 5*2 + 4 = 14.
-```
-
-Testing every allowed `ell=0,...,7` gives CM terms `18, 18, 17, 16, 15, 14, 14, 14`. Their minimum is 14, so the candidate `kappa=14` satisfies the CM-like bound. The function `max_kappa` repeats this test for every admissible `kappa` and reports the largest passing value.
-
-## Variables
+## Main names
 
 | Name | Meaning |
 | --- | --- |
-| `q_values` | Quantum alphabet sizes used in Table II. |
-| `delta_n_r` | The tested distances and the six `(n,r)` pairs assigned to each distance. |
-| `grassl_same` | Compressed positions where the Grassl dimension remains unchanged as `N` increases. |
-| `k_Grassl` | Complete reconstructed Grassl dimension sequences indexed by `(Q,delta)` and `N`. |
-| `bounds` | Names, formula numbers, functions, and output order of the nine bounds. |
-| `q` | Quantum alphabet size. |
-| `Q` | Classical alphabet size `q^2` used by the Hermitian construction. |
-| `delta` | Minimum distance. |
-| `n` | Quantum code length. |
-| `r` | Locality. |
-| `kappa` | Candidate quantum dimension. |
-| `m` | Auxiliary classical dimension `(n+kappa)/2`. |
-| `ell` | Integer optimized over in the displayed bound. |
-| `N` | Residual classical code length `m-ell*(r+1)`. |
-| `V` | Hamming-ball volume used in the pure sphere-packing-like test. |
-
-## Functions
-
-| Function | Purpose |
-| --- | --- |
-| `expand_grassl` | Expands one compressed `grassl_same` tuple into values indexed by `N=0,...,120`. |
+| `q_values`, `delta_values`, `n_values`, `r_values` | Candidate parameter ranges. |
+| `sample_size`, `seed` | Eight samples per `(q,delta)` and random seed 2026. |
+| `grassl_same` | Positions where the compressed Grassl dimension does not increase. |
+| `k_Grassl` | Grassl dimensions restored for `N=0,...,130`. |
+| `bounds` | Bound names, functions, and output order. |
+| `expand_grassl` | Restores one compressed Grassl sequence. |
 | `GG` | Tests the GG Singleton-like bound in (1). |
-| `pure_S` | Tests the pure Singleton-like bound in (7). |
-| `pure_G` | Tests the pure Griesmer-like bound in (8). |
-| `pure_P` | Tests the pure Plotkin-like bound in (9). |
-| `pure_SP` | Tests the pure sphere-packing-like bound in (10). |
-| `ref25_G` | Tests the Griesmer-like bound in [25, Theorem 6]. |
-| `ref25_CM` | Tests the CM-like bound in [25, Theorem 6] by enumerating every allowed `ell` and using `k=k_Grassl^(q^2)(N,delta)`. |
-| `ref25_S` | Tests the Singleton-like bound in [25, Theorem 6]. |
-| `ref25_P` | Tests the Plotkin-like bound in [25, Theorem 6]. |
-| `max_kappa` | Enumerates all admissible `kappa` and returns the largest candidate allowed by one bound. |
-| `main` | Prints the 60 parameter blocks and nine results per block. |
+| `pure_S`, `pure_G`, `pure_P`, `pure_SP` | Test the four pure bounds in (7)--(10). |
+| `ref25_G`, `ref25_CM`, `ref25_S`, `ref25_P` | Test the four bounds in [25, Theorem 6]. |
+| `max_kappa` | Returns the largest parity-compatible `kappa` allowed by one bound. |
+| `admissible` | Checks whether all nine bounds have a numerical result. |
+| `parameter_tuples` | Reconstructs the 80 seeded random tuples. |
+| `main` | Prints each tuple followed by its nine results. |
 
 ## Output order
 
@@ -142,14 +110,10 @@ Testing every allowed `ell=0,...,7` gives CM terms `18, 18, 17, 16, 15, 14, 14, 
 2. Pure Singleton-like bound in (7)
 3. Pure Griesmer-like bound in (8)
 4. Pure Plotkin-like bound in (9)
-5. Pure sphere-packing-like bound in (10)
+5. Pure Sphere-packing-like bound in (10)
 6. [25, Theorem 6] Griesmer-like bound
 7. [25, Theorem 6] CM-like bound
 8. [25, Theorem 6] Singleton-like bound
 9. [25, Theorem 6] Plotkin-like bound
 
-The console output contains only the parameter tuple and the nine final numerical results. The CM algorithm and the Grassl table data used for item 7 are documented in the preceding section and are not repeated in the output. A smaller reported value gives a tighter upper restriction on `kappa` for that parameter tuple. The computation establishes comparisons only over the explicitly listed finite parameter set.
-
-## License
-
-The source code is released under the MIT License.
+The console output contains only `(q, delta, n, r)` and the nine final numerical results. The computation establishes comparisons only for the reproducible finite parameter set described above.
