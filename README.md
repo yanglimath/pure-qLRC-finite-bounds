@@ -71,9 +71,5 @@ N:          0  1  2  3  4  5  6  7
 Best-known dimension:  0  0  0  1  2  3  3  4
 ```
 
-For example, the dimension remains `3` when `N = 6` because `6` appears in the tuple. It then increases to `4` when `N = 7` because `7` does not appear in the tuple.
-
-This rule is implemented by
-`values.append(values[-1] + (N not in same))`
-
+For example, the dimension remains `3` when `N = 6` because `6` appears in the tuple. It then increases to `4` when `N = 7` because `7` does not appear in the tuple. This rule is implemented by `values.append(values[-1] + (N not in same))`
 In Python, `N not in same` has value `0` when `N` appears in the tuple and value `1` when it does not. In this way, the function reconstructs the complete list of largest known dimensions for `0 <= N <= 130`.
