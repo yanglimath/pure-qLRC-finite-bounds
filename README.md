@@ -47,8 +47,7 @@ parameter tuple. A smaller numerical value is a tighter upper restriction on
   N = m - ell*(r+1)
   kappa <= min_ell {ell*r + k_opt^(Q)(N,delta)}.
   ```
-The variable `grassl_same` is used to reconstruct the largest known dimensions of linear codes recorded in Grassl’s code table [14] for 
-\(Q\in\{4,9\}\), \(\delta\in\{3,5,7,9,11\}\), and \(0\leq N\leq130\). For the numerical evaluation, we treat these best-known dimensions as the exact values of \(k_{\mathrm{opt}}^{(Q)}(N,\delta)\). Therefore, whenever the optimality of a recorded dimension has not been established, the resulting CM-like bound and the associated numerical comparisons are conditional on this assumption.
+The variable `grassl_same` is used to reconstruct the largest known dimensions of linear codes recorded in Grassl’s code table [14] for `Q in {4, 9}`, `delta in {3, 5, 7, 9, 11}`, and `0 <= N <= 130`. For the numerical evaluation, we treat these best-known dimensions as the exact values of `k_opt^(Q)(N, delta)`. Therefore, whenever the optimality of a recorded dimension has not been established, the resulting CM-like bound and the associated numerical comparisons are conditional on this assumption.
 
 ## Output order
 
