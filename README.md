@@ -29,12 +29,12 @@ not affect parameter selection. Hence the program produces
 
 ## Some notes
 
--For every fixed `(q,delta,n,r)`, `max_kappa` checks every integer
+- For every fixed `(q,delta,n,r)`, `max_kappa` checks every integer
 `0 <= kappa <= n` and returns the largest candidate accepted by the selected bound. 
 All these bounds hold under the same pure assumption and their own condititons. 
 
 
--If a bound accepts no candidate, `max_kappa` returns `None`, which the console
+- If a bound accepts no candidate, `max_kappa` returns `None`, which the console
 displays as `not applicable`. Such a result does not remove the sampled
 parameter tuple. A smaller numerical value is a tighter upper restriction on
 `kappa`.
@@ -47,16 +47,4 @@ parameter tuple. A smaller numerical value is a tighter upper restriction on
   N = m - ell*(r+1)
   kappa <= min_ell {ell*r + k_opt^(Q)(N,delta)}.
   ```
-The variable `grassl_same` is used to reconstruct the largest known dimensions of linear codes recorded in Grassl’s code table [14] for `Q in {4, 9}`, `delta in {3, 5, 7, 9, 11}`, and `0 <= N <= 130`. For the numerical evaluation, we treat these best-known dimensions as the exact values of `k_opt^(Q)(N, delta)`. Therefore, whenever the optimality of a recorded dimension has not been established, the resulting CM-like bound and the associated numerical comparisons are conditional on this assumption.
-
-## Output order
-
-1. GG Singleton-like bound in (1)
-2. Pure Singleton-like bound in (7)
-3. Pure Griesmer-like bound in (8)
-4. Pure Plotkin-like bound in (9)
-5. Pure Sphere-packing-like bound in (10)
-6. [26, Theorem 6] Griesmer-like bound
-7. [26, Theorem 6] CM-like bound
-8. [26, Theorem 6] Singleton-like bound
-9. [26, Theorem 6] Plotkin-like bound
+The variable `grassl_same` is used to reconstruct the largest known dimensions of linear codes recorded in Grassl’s code table [14] for `Q in {4, 9}`, `delta in {3, 5, 7, 9, 11}`, and `0 <= N <= 130`. For the numerical evaluation, we treat these best-known dimensions as the exact values of `k_opt^(Q)(N, delta)`. Therefore, whenever the optimality of a recorded dimension has not been established, the resulting CM-like bound and the associated numerical comparisons are conditional on this assumption. 
