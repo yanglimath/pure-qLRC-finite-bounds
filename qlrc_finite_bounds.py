@@ -2,23 +2,22 @@
 
 from fractions import Fraction
 from math import comb
+from random import Random
 
 
 q_values = (2, 3)
-delta_n_r = {
-    3: ((38, 2), (52, 3), (67, 4), (86, 5), (100, 6), (114, 7)),
-    5: ((45, 2), (54, 3), (69, 4), (90, 5), (102, 6), (113, 7)),
-    7: ((42, 2), (60, 3), (68, 4), (84, 5), (99, 6), (120, 7)),
-    9: ((38, 2), (53, 3), (68, 4), (86, 5), (99, 6), (115, 7)),
-    11: ((45, 2), (60, 3), (73, 4), (85, 5), (97, 6), (111, 7)),
-}
+delta_values = (3, 5, 7, 9, 11)
+n_values = range(30, 131)
+r_values = range(2, 7)
+sample_size = 8
+seed = 2026
 
 
 grassl_same = {
     (4, 3): (1, 2, 6, 22, 86),
     (4, 5): (1, 2, 3, 4, 6, 12, 22, 44, 86),
     (4, 7): (
-        1, 2, 3, 4, 5, 6, 8, 10, 18, 22, 27, 43, 47, 71, 114,
+        1, 2, 3, 4, 5, 6, 8, 10, 18, 22, 27, 43, 47, 71, 114, 123,
     ),
     (4, 9): (
         1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 15, 19, 28, 29, 32, 43,
@@ -45,7 +44,7 @@ grassl_same = {
 
 def expand_grassl(same):
     values = [0]
-    for N in range(1, 121):
+    for N in range(1, 131):
         values.append(values[-1] + (N not in same))
     return tuple(values)
 
@@ -127,13 +126,27 @@ def max_kappa(bound, q, delta, n, r):
     return max((kappa for kappa in range(n + 1) if (n + kappa) % 2 == 0 and bound(q, delta, n, r, kappa)), default=None)
 
 
-def main():
+def admissible(q, delta, n, r):
+    return all(any(bound(q, delta, n, r, kappa) for kappa in range(n % 2, n + 1, 2)) for _, bound in bounds)
+
+
+def parameter_tuples():
+    rng = Random(seed)
     for q in q_values:
-        for delta, pairs in delta_n_r.items():
-            for n, r in pairs:
-                print(f"\n(q, delta, n, r) = ({q}, {delta}, {n}, {r})")
-                for index, (name, bound) in enumerate(bounds, start=1):
-                    print(f"{index}. {name}: {max_kappa(bound, q, delta, n, r)}")
+        used = set()
+        for delta in delta_values:
+            pairs = [(n, r) for n in n_values for r in r_values if (n, r) not in used and admissible(q, delta, n, r)]
+            selected = rng.sample(pairs, sample_size)
+            used.update(selected)
+            for n, r in selected:
+                yield q, delta, n, r
+
+
+def main():
+    for q, delta, n, r in parameter_tuples():
+        print(f"\n(q, delta, n, r) = ({q}, {delta}, {n}, {r})")
+        for index, (name, bound) in enumerate(bounds, start=1):
+            print(f"{index}. {name}: {max_kappa(bound, q, delta, n, r)}")
 
 
 if __name__ == "__main__":
