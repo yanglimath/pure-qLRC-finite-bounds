@@ -31,7 +31,7 @@ not affect parameter selection. Hence the program produces
 
 - For every fixed `(q,delta,n,r)`, `max_kappa` checks every integer
 `0 <= kappa <= n` and returns the largest candidate accepted by the selected bound. 
-All these bounds hold under the same pure assumption and their own condititons. 
+All these bounds hold under the same pure assumption and their own conditions. 
 
 
 - If a bound accepts no candidate, `max_kappa` returns `None`, which the console
