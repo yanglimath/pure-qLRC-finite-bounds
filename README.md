@@ -5,7 +5,7 @@ finite-length comparison tables in the manuscript [**LLLL2026**]. It evaluates n
 bounds on the quantum dimension `kappa` using only the Python standard
 library. The program prints results to the console and creates no files.
 
-[**LELLS2026**] Y. Li, S., G. Luo, and S. Ling, *Improved bounds and optimal constructions of pure
+[**LLLL2026**] Y. Li, S., G. Luo, and S. Ling, *Improved bounds and optimal constructions of pure
 quantum locally recoverable codes*, preprint, 2026. 
 
 
